@@ -10,14 +10,11 @@
 # In[1]:
 
 
-# Using guns.csv
-
 import csv
 
 f = open('guns.csv')
 csvreader = csv.reader(f)
 data = list(csvreader)
-
 print(data[:5])
 
 
@@ -25,24 +22,18 @@ print(data[:5])
 
 
 data = data[1:]
-
 print(data[:5])
 
 
 # In[3]:
 
 
-# List comprehension for 'year' column
-
 years = [col[1] for col in data]
-
 print(years[:5])
 
 
 # In[4]:
 
-
-# Counting instances of each year
 
 year_counts = {}
 
@@ -58,8 +49,6 @@ print(year_counts)
 # In[5]:
 
 
-# Constructing datetime instance using 'year' and 'month' column
-
 import datetime
 
 dates = [datetime.datetime(year=int(col[1]), month=int(col[2]), day=1) for col in data]
@@ -69,8 +58,6 @@ print(dates[:5])
 
 # In[6]:
 
-
-# Counting date occurrences using dates
 
 date_counts = {}
 
@@ -86,10 +73,7 @@ print(date_counts)
 # In[7]:
 
 
-# List comp and count for 'sex' column
-
 sexes = [col[5] for col in data]
-
 sex_counts = {}
 
 for sex in sexes:
@@ -104,10 +88,7 @@ print(sex_counts)
 # In[8]:
 
 
-# List comp and count for 'race' column
-
 races = [col[7] for col in data]
-
 race_counts = {}
 
 for race in races:
@@ -122,27 +103,15 @@ print(race_counts)
 # In[9]:
 
 
-# Using census.csv
-
 j = open('census.csv')
 csvreader1 = csv.reader(j)
 census = list(csvreader1)
-
+census = census[1:]
 print(census)
 
 
 # In[10]:
 
-
-census = census[1:]
-
-print(census)
-
-
-# In[18]:
-
-
-# Manual dictionary creation to blend census.csv data
 
 mapping = {
     'Asian/Pacific Islander' : int(census[0][16]),
@@ -155,7 +124,7 @@ mapping = {
 print(mapping)
 
 
-# In[34]:
+# In[11]:
 
 
 race_per_hundredk = {}
@@ -170,29 +139,140 @@ for race in race_counts:
 print(race_per_hundredk)
 
 
-# In[35]:
+# In[12]:
 
 
+months = [col[2] for col in data]
 intents = [col[3] for col in data]
+genders = [col[5] for col in data]
 races = [col[7] for col in data]
 
 homicide_race_counts = {}
+homicide_race_rates = {}
 
-for i, race in enumerate(races):
-    if intents[i] == 'Homicide':
-        if race not in homicide_race_counts:
-            homicide_race_counts[race] = 1
-        else:
-            homicide_race_counts[race] += 1
+homicide_month_counts = {}
+homicide_month_rates = {}
 
-for count in homicide_race_counts:
-    val = homicide_race_counts[count]
+homicide_gender_counts = {}
+homicide_gender_rates = {}
+
+accidental_gender_counts = {}
+accidental_gender_rates = {}
+
+accidental_race_counts = {}
+accidental_race_rates = {}
+
+suicide_gender_counts = {}
+suicide_gender_rates = {}
+
+suicide_race_counts = {}
+suicide_race_rates = {}
+
+
+def count_rate(g_dict, i_list, intent, counts_dict, rates_dict, m_dict):
+    for i, gender in enumerate(g_dict):
+        if i_list[i] == intent:
+            if gender not in counts_dict:
+                counts_dict[gender] = 1
+            else:
+                counts_dict[gender] += 1
+                
+    for gender, count in counts_dict.items():
+        for eth in m_dict:
+            rate = round(((count / m_dict[eth]) * 100000), 5)
+            rates_dict[gender] = rate
     
-    for mapp in mapping:
-        rate = round(((val / mapping[mapp]) * 100000), 5)
-        homicide_race_counts[count] = rate
+    return counts_dict, rates_dict
+
+hr = count_rate(races, intents, 'Homicide', homicide_race_counts, homicide_race_rates, mapping)
+hm = count_rate(months, intents, 'Homicide', homicide_month_counts, homicide_month_rates, mapping)
+hg = count_rate(genders, intents, 'Homicide', homicide_gender_counts, homicide_gender_rates, mapping)
+ag = count_rate(genders, intents, 'Accidental', accidental_gender_counts, accidental_gender_rates, mapping)
+ar = count_rate(races, intents, 'Accidental', accidental_race_counts, accidental_race_rates, mapping)
+sg = count_rate(genders, intents, 'Suicide', suicide_gender_counts, suicide_gender_rates, mapping)
+sr = count_rate(races, intents, 'Suicide', suicide_race_counts, suicide_race_rates, mapping)
+
+
+# In[13]:
+
+
+hr
+
+
+# In[14]:
+
+
+hm
+
+
+# In[15]:
+
+
+hg
+
+
+# In[16]:
+
+
+ag
+
+
+# In[17]:
+
+
+ar
+
+
+# In[18]:
+
+
+sg
+
+
+# In[19]:
+
+
+sr
+
+
+# In[22]:
+
+
+locations = [col[9] for col in data]
+education = [col[10] for col in data]
+
+counts_by_location = {}
+rates_by_location = {}
+
+counts_by_education = {}
+rates_by_education = {}
+
+def morecountrate(input_list, counts_dict, mapping_dict, rates_dict):
+    for value in input_list:
+        if value not in counts_dict:
+            counts_dict[value] = 1
+        else:
+            counts_dict[value] += 1
             
-print(homicide_race_counts)
+    for place, count in counts_dict.items():
+        for eth in mapping_dict:
+            rate = round(((count / mapping_dict[eth]) * 100000), 5)
+            rates_dict[place] = rate
+        
+    return counts_dict, rates_dict
+
+cbl = morecountrate(locations, counts_by_location, mapping, rates_by_location)
+cbe = morecountrate(education, counts_by_education, mapping, rates_by_education)
 
 
-# > Computing rates of gun deaths per race/homicide; filtering by intent column
+# In[23]:
+
+
+cbl
+
+
+# In[24]:
+
+
+cbe
+
